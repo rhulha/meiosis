@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { DragControls } from 'three/addons/controls/DragControls.js';
 
 export class GeneLab {
     constructor(container) {
@@ -24,6 +25,17 @@ export class GeneLab {
         this.controls.enableDamping = true;
         this.controls.dampingFactor = 0.05;
 
+        this.draggableObjects = [];
+        this.dragControls = new DragControls(this.draggableObjects, this.camera, this.renderer.domElement);
+
+        this.dragControls.addEventListener('dragstart', () => {
+            this.controls.enabled = false;
+        });
+
+        this.dragControls.addEventListener('dragend', () => {
+            this.controls.enabled = true;
+        });
+
         this.animate();
 
         window.addEventListener('resize', () => this.onWindowResize());
@@ -35,6 +47,7 @@ export class GeneLab {
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
         this.scene.add(sphere);
+        this.draggableObjects.push(sphere);
         return sphere;
     }
 
