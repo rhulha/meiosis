@@ -27,7 +27,12 @@
         import { GeneLab } from './gene_lab.js';
 
         const lab = new GeneLab();
-        lab.showBall();
+        let maternal_ball1 = lab.addBall(-1, 0, 0, 0xff0000);
+        let paternal_ball1 = lab.addBall(1, 0, 0, 0x0000ff);
+
+        let maternal_ball2 = lab.addConnectedBall(maternal_ball1);
+
+        lab.addStickBall(maternal_ball2);
     </script>
 </body>
 
