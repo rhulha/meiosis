@@ -1,4 +1,5 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 export class GeneLab {
     constructor(container) {
@@ -19,6 +20,10 @@ export class GeneLab {
         directionalLight.position.set(5, 5, 5);
         this.scene.add(directionalLight);
 
+        this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+        this.controls.enableDamping = true;
+        this.controls.dampingFactor = 0.05;
+
         this.animate();
 
         window.addEventListener('resize', () => this.onWindowResize());
@@ -34,6 +39,7 @@ export class GeneLab {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
 
