@@ -63,11 +63,32 @@
         const chromo3 = lab.addChromosome("oo-oooo", yellow, 5, 10, 0);
         const chromo4 = lab.addChromosome("ooo-ooooooo", red, 10, -5, 0);
 
-        document.getElementById('duplicateBtn').addEventListener('click', async () => {
-            await lab.duplicateChromosome(chromo1, 3, 0, 0);
-            await lab.duplicateChromosome(chromo2, 3, 0, 0);
-            await lab.duplicateChromosome(chromo3, 3, 0, 0);
-            await lab.duplicateChromosome(chromo4, 3, 0, 0);
+        let chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy;
+        let state = 'initial';
+        const btn = document.getElementById('duplicateBtn');
+
+        btn.addEventListener('click', async () => {
+            btn.disabled = true;
+
+            if (state === 'initial') {
+                btn.textContent = 'Duplicating...';
+                chromo1_copy = await lab.duplicateChromosome(chromo1, 3, 0, 0);
+                chromo2_copy = await lab.duplicateChromosome(chromo2, 3, 0, 0);
+                chromo3_copy = await lab.duplicateChromosome(chromo3, 3, 0, 0);
+                chromo4_copy = await lab.duplicateChromosome(chromo4, 3, 0, 0);
+
+                state = 'duplicated';
+                btn.textContent = 'Form Tetrads';
+                btn.disabled = false;
+            } else if (state === 'duplicated') {
+                btn.textContent = 'Forming Tetrads...';
+                await lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy);
+                await lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy);
+
+                state = 'tetrads_formed';
+                btn.textContent = 'Done';
+                btn.disabled = false;
+            }
         });
 
     </script>

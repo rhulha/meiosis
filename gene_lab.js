@@ -299,6 +299,159 @@ export class GeneLab {
         };
     }
 
+    async formTetrad(chromo1, chromo2, spacing = 0.5, duration = 2000) {
+        const startTime = Date.now();
+
+        const initialPositions1 = chromo1.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const initialPositions2 = chromo2.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const centerX = (initialPositions1[0].x + initialPositions2[0].x) / 2;
+
+        chromo1.balls.forEach(ball => ball.userData.pinned = true);
+        chromo2.balls.forEach(ball => ball.userData.pinned = true);
+
+        return new Promise((resolve) => {
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+
+                chromo1.balls.forEach((ball, i) => {
+                    const initial = initialPositions1[i];
+                    const targetX = centerX - spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.userData.oldX = ball.position.x;
+                });
+
+                chromo2.balls.forEach((ball, i) => {
+                    const initial = initialPositions2[i];
+                    const targetX = centerX + spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.userData.oldX = ball.position.x;
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    chromo1.balls.forEach(ball => ball.userData.pinned = false);
+                    chromo2.balls.forEach(ball => ball.userData.pinned = false);
+                    resolve();
+                }
+            };
+
+            animate();
+        });
+    }
+
+    easeInOutCubic(x) {
+        return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+    }
+
+    async formTetrad4(chromo1, chromo2, chromo3, chromo4, spacing = 0.5, duration = 2000) {
+        const startTime = Date.now();
+
+        const initialPositions1 = chromo1.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const initialPositions2 = chromo2.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const initialPositions3 = chromo3.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const initialPositions4 = chromo4.balls.map(ball => ({
+            x: ball.position.x,
+            y: ball.position.y,
+            z: ball.position.z
+        }));
+
+        const centerX = (initialPositions1[0].x + initialPositions2[0].x + initialPositions3[0].x + initialPositions4[0].x) / 4;
+        const centerY = (initialPositions1[0].y + initialPositions2[0].y + initialPositions3[0].y + initialPositions4[0].y) / 4;
+
+        chromo1.balls.forEach(ball => ball.userData.pinned = true);
+        chromo2.balls.forEach(ball => ball.userData.pinned = true);
+        chromo3.balls.forEach(ball => ball.userData.pinned = true);
+        chromo4.balls.forEach(ball => ball.userData.pinned = true);
+
+        return new Promise((resolve) => {
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+
+                chromo1.balls.forEach((ball, i) => {
+                    const initial = initialPositions1[i];
+                    const targetX = centerX - spacing * 1.5;
+                    const targetY = centerY + spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.position.y = initial.y + (targetY - initial.y) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                });
+
+                chromo2.balls.forEach((ball, i) => {
+                    const initial = initialPositions2[i];
+                    const targetX = centerX - spacing * 0.5;
+                    const targetY = centerY + spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.position.y = initial.y + (targetY - initial.y) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                });
+
+                chromo3.balls.forEach((ball, i) => {
+                    const initial = initialPositions3[i];
+                    const targetX = centerX + spacing * 0.5;
+                    const targetY = centerY - spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.position.y = initial.y + (targetY - initial.y) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                });
+
+                chromo4.balls.forEach((ball, i) => {
+                    const initial = initialPositions4[i];
+                    const targetX = centerX + spacing * 1.5;
+                    const targetY = centerY - spacing;
+                    ball.position.x = initial.x + (targetX - initial.x) * eased;
+                    ball.position.y = initial.y + (targetY - initial.y) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    chromo1.balls.forEach(ball => ball.userData.pinned = false);
+                    chromo2.balls.forEach(ball => ball.userData.pinned = false);
+                    chromo3.balls.forEach(ball => ball.userData.pinned = false);
+                    chromo4.balls.forEach(ball => ball.userData.pinned = false);
+                    resolve();
+                }
+            };
+
+            animate();
+        });
+    }
+
     updatePhysics() {
         for (let ball of this.draggableObjects) {
             if (!ball.userData.pinned) {
