@@ -356,40 +356,38 @@ export class GeneLab {
         return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
     }
 
-    async formTetrad4(chromo1, chromo2, chromo3, chromo4, spacing = 0.5, duration = 2000) {
+    findStickBall(chromosome) {
+        for (let ball of chromosome.balls) {
+            const connection = this.connections.find(conn =>
+                (conn.parent === ball || conn.child === ball) && conn.line !== null
+            );
+            if (connection) {
+                return connection.parent;
+            }
+        }
+        return chromosome.balls[0];
+    }
+
+    async formTetrad4(chromo1, chromo2, chromo3, chromo4, spacing = 3, duration = 2000) {
         const startTime = Date.now();
 
-        const initialPositions1 = chromo1.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
+        const stickBall1 = this.findStickBall(chromo1);
+        const stickBall2 = this.findStickBall(chromo2);
+        const stickBall3 = this.findStickBall(chromo3);
+        const stickBall4 = this.findStickBall(chromo4);
 
-        const initialPositions2 = chromo2.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
+        const initial1 = { x: stickBall1.position.x, y: stickBall1.position.y, z: stickBall1.position.z };
+        const initial2 = { x: stickBall2.position.x, y: stickBall2.position.y, z: stickBall2.position.z };
+        const initial3 = { x: stickBall3.position.x, y: stickBall3.position.y, z: stickBall3.position.z };
+        const initial4 = { x: stickBall4.position.x, y: stickBall4.position.y, z: stickBall4.position.z };
 
-        const initialPositions3 = chromo3.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
+        const centerX = (initial1.x + initial2.x + initial3.x + initial4.x) / 4;
+        const centerY = (initial1.y + initial2.y + initial3.y + initial4.y) / 4;
 
-        const initialPositions4 = chromo4.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
-
-        const centerX = (initialPositions1[0].x + initialPositions2[0].x + initialPositions3[0].x + initialPositions4[0].x) / 4;
-        const centerY = (initialPositions1[0].y + initialPositions2[0].y + initialPositions3[0].y + initialPositions4[0].y) / 4;
-
-        chromo1.balls.forEach(ball => ball.userData.pinned = true);
-        chromo2.balls.forEach(ball => ball.userData.pinned = true);
-        chromo3.balls.forEach(ball => ball.userData.pinned = true);
-        chromo4.balls.forEach(ball => ball.userData.pinned = true);
+        stickBall1.userData.pinned = true;
+        stickBall2.userData.pinned = true;
+        stickBall3.userData.pinned = true;
+        stickBall4.userData.pinned = true;
 
         return new Promise((resolve) => {
             const animate = () => {
@@ -397,53 +395,41 @@ export class GeneLab {
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = this.easeInOutCubic(progress);
 
-                chromo1.balls.forEach((ball, i) => {
-                    const initial = initialPositions1[i];
-                    const targetX = centerX - spacing * 1.5;
-                    const targetY = centerY + spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.position.y = initial.y + (targetY - initial.y) * eased;
-                    ball.userData.oldX = ball.position.x;
-                    ball.userData.oldY = ball.position.y;
-                });
+                const target1X = centerX - spacing * 1.5;
+                const target1Y = centerY;
+                stickBall1.position.x = initial1.x + (target1X - initial1.x) * eased;
+                stickBall1.position.y = initial1.y + (target1Y - initial1.y) * eased;
+                stickBall1.userData.oldX = stickBall1.position.x;
+                stickBall1.userData.oldY = stickBall1.position.y;
 
-                chromo2.balls.forEach((ball, i) => {
-                    const initial = initialPositions2[i];
-                    const targetX = centerX - spacing * 0.5;
-                    const targetY = centerY + spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.position.y = initial.y + (targetY - initial.y) * eased;
-                    ball.userData.oldX = ball.position.x;
-                    ball.userData.oldY = ball.position.y;
-                });
+                const target2X = centerX - spacing * 0.5;
+                const target2Y = centerY;
+                stickBall2.position.x = initial2.x + (target2X - initial2.x) * eased;
+                stickBall2.position.y = initial2.y + (target2Y - initial2.y) * eased;
+                stickBall2.userData.oldX = stickBall2.position.x;
+                stickBall2.userData.oldY = stickBall2.position.y;
 
-                chromo3.balls.forEach((ball, i) => {
-                    const initial = initialPositions3[i];
-                    const targetX = centerX + spacing * 0.5;
-                    const targetY = centerY - spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.position.y = initial.y + (targetY - initial.y) * eased;
-                    ball.userData.oldX = ball.position.x;
-                    ball.userData.oldY = ball.position.y;
-                });
+                const target3X = centerX + spacing * 0.5;
+                const target3Y = centerY;
+                stickBall3.position.x = initial3.x + (target3X - initial3.x) * eased;
+                stickBall3.position.y = initial3.y + (target3Y - initial3.y) * eased;
+                stickBall3.userData.oldX = stickBall3.position.x;
+                stickBall3.userData.oldY = stickBall3.position.y;
 
-                chromo4.balls.forEach((ball, i) => {
-                    const initial = initialPositions4[i];
-                    const targetX = centerX + spacing * 1.5;
-                    const targetY = centerY - spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.position.y = initial.y + (targetY - initial.y) * eased;
-                    ball.userData.oldX = ball.position.x;
-                    ball.userData.oldY = ball.position.y;
-                });
+                const target4X = centerX + spacing * 1.5;
+                const target4Y = centerY;
+                stickBall4.position.x = initial4.x + (target4X - initial4.x) * eased;
+                stickBall4.position.y = initial4.y + (target4Y - initial4.y) * eased;
+                stickBall4.userData.oldX = stickBall4.position.x;
+                stickBall4.userData.oldY = stickBall4.position.y;
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    chromo1.balls.forEach(ball => ball.userData.pinned = false);
-                    chromo2.balls.forEach(ball => ball.userData.pinned = false);
-                    chromo3.balls.forEach(ball => ball.userData.pinned = false);
-                    chromo4.balls.forEach(ball => ball.userData.pinned = false);
+                    stickBall1.userData.pinned = false;
+                    stickBall2.userData.pinned = false;
+                    stickBall3.userData.pinned = false;
+                    stickBall4.userData.pinned = false;
                     resolve();
                 }
             };
