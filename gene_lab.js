@@ -26,14 +26,28 @@ export class GeneLab {
         this.controls.dampingFactor = 0.05;
 
         this.draggableObjects = [];
+        this.connections = [];
+        this.gravity = 0.0;
+        this.friction = 0.99;
+        this.iterations = 5;
+
         this.dragControls = new DragControls(this.draggableObjects, this.camera, this.renderer.domElement);
 
-        this.dragControls.addEventListener('dragstart', () => {
-            this.controls.enabled = false;
+        this.dragControls.addEventListener('drag', (event) => {
+            const object = event.object;
+            object.userData.oldX = object.position.x;
+            object.userData.oldY = object.position.y;
+            object.userData.oldZ = object.position.z;
         });
 
-        this.dragControls.addEventListener('dragend', () => {
+        this.dragControls.addEventListener('dragstart', (event) => {
+            this.controls.enabled = false;
+            event.object.userData.pinned = true;
+        });
+
+        this.dragControls.addEventListener('dragend', (event) => {
             this.controls.enabled = true;
+            event.object.userData.pinned = false;
         });
 
         this.animate();
@@ -46,6 +60,10 @@ export class GeneLab {
         const material = new THREE.MeshStandardMaterial({ color: color });
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
+        sphere.userData.oldX = x;
+        sphere.userData.oldY = y;
+        sphere.userData.oldZ = z;
+        sphere.userData.pinned = false;
         this.scene.add(sphere);
         this.draggableObjects.push(sphere);
         return sphere;
@@ -54,30 +72,125 @@ export class GeneLab {
     addConnectedBall(parent) {
         const child = this.addBall(parent.position.x, parent.position.y-3, parent.position.z, parent.material.color);
 
-        //parent.add(child);
+        const dx = child.position.x - parent.position.x;
+        const dy = child.position.y - parent.position.y;
+        const dz = child.position.z - parent.position.z;
+        const restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
-        //this.scene.add(child);
+        this.connections.push({
+            parent: parent,
+            child: child,
+            restLength: restLength,
+            line: null
+        });
 
         return child;
-
     }
 
     addStickBall(parent) {
         const child = this.addBall(parent.position.x, parent.position.y-5, parent.position.z, parent.material.color);
-        //this.scene.add(child);
+
+        const dx = child.position.x - parent.position.x;
+        const dy = child.position.y - parent.position.y;
+        const dz = child.position.z - parent.position.z;
+        const restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
         const material = new THREE.LineBasicMaterial({ color: 0xffffff });
-        const points = [];
-        points.push(parent.position);
-        points.push(child.position);
+        const points = [
+            new THREE.Vector3(parent.position.x, parent.position.y, parent.position.z),
+            new THREE.Vector3(child.position.x, child.position.y, child.position.z)
+        ];
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const line = new THREE.Line(geometry, material);
         this.scene.add(line);
+
+        this.connections.push({
+            parent: parent,
+            child: child,
+            restLength: restLength,
+            line: line
+        });
+
         return child;
+    }
+
+    updatePhysics() {
+        for (let ball of this.draggableObjects) {
+            if (!ball.userData.pinned) {
+                const velocityX = (ball.position.x - ball.userData.oldX) * this.friction;
+                const velocityY = (ball.position.y - ball.userData.oldY) * this.friction;
+                const velocityZ = (ball.position.z - ball.userData.oldZ) * this.friction;
+
+                ball.userData.oldX = ball.position.x;
+                ball.userData.oldY = ball.position.y;
+                ball.userData.oldZ = ball.position.z;
+
+                ball.position.x += velocityX;
+                ball.position.y += velocityY - this.gravity;
+                ball.position.z += velocityZ;
+            }
+        }
+
+        for (let i = 0; i < this.iterations; i++) {
+            this.applyConstraints();
+        }
+
+        this.updateLines();
+    }
+
+    applyConstraints() {
+        for (let connection of this.connections) {
+            const parent = connection.parent;
+            const child = connection.child;
+            const restLength = connection.restLength;
+
+            const dx = child.position.x - parent.position.x;
+            const dy = child.position.y - parent.position.y;
+            const dz = child.position.z - parent.position.z;
+            let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            if (dist === 0) {
+                dist = 0.0001;
+            }
+
+            const difference = restLength - dist;
+            const percent = difference / dist / 2;
+            const offsetX = dx * percent;
+            const offsetY = dy * percent;
+            const offsetZ = dz * percent;
+
+            if (!parent.userData.pinned) {
+                parent.position.x -= offsetX;
+                parent.position.y -= offsetY;
+                parent.position.z -= offsetZ;
+            }
+
+            if (!child.userData.pinned) {
+                child.position.x += offsetX;
+                child.position.y += offsetY;
+                child.position.z += offsetZ;
+            }
+        }
+    }
+
+    updateLines() {
+        for (let connection of this.connections) {
+            if (connection.line) {
+                const positions = connection.line.geometry.attributes.position.array;
+                positions[0] = connection.parent.position.x;
+                positions[1] = connection.parent.position.y;
+                positions[2] = connection.parent.position.z;
+                positions[3] = connection.child.position.x;
+                positions[4] = connection.child.position.y;
+                positions[5] = connection.child.position.z;
+                connection.line.geometry.attributes.position.needsUpdate = true;
+            }
+        }
     }
 
     animate() {
         requestAnimationFrame(() => this.animate());
+        this.updatePhysics();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
     }
