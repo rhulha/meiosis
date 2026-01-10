@@ -60,7 +60,11 @@ export class GeneLab {
 
     addBall(x = 0, y = 0, z = 0, color) {
         const geometry = new THREE.SphereGeometry(1, 32, 32);
-        const material = new THREE.MeshStandardMaterial({ color: color });
+        const material = new THREE.MeshStandardMaterial({
+            color: color,
+            emissive: color,
+            emissiveIntensity: 0.3
+        });
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
         sphere.userData.oldX = x;
