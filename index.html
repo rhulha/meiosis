@@ -10,6 +10,31 @@
             margin: 0;
             overflow: hidden;
         }
+
+        #duplicateBtn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            transition: background-color 0.3s;
+        }
+
+        #duplicateBtn:hover {
+            background-color: #45a049;
+        }
+
+        #duplicateBtn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
     </style>
     <script type="importmap">
         {
@@ -23,6 +48,8 @@
 </head>
 
 <body>
+    <button id="duplicateBtn">Duplicate Chromosomes</button>
+
     <script type="module">
         import { GeneLab } from './gene_lab.js';
 
@@ -35,6 +62,13 @@
         const chromo2 = lab.addChromosome("ooo-ooooooo", yellow, -5, 8, 0);
         const chromo3 = lab.addChromosome("oo-oooo", yellow, 5, 10, 0);
         const chromo4 = lab.addChromosome("ooo-ooooooo", red, 10, -5, 0);
+
+        document.getElementById('duplicateBtn').addEventListener('click', async () => {
+            await lab.duplicateChromosome(chromo1, 3, 0, 0);
+            await lab.duplicateChromosome(chromo2, 3, 0, 0);
+            await lab.duplicateChromosome(chromo3, 3, 0, 0);
+            await lab.duplicateChromosome(chromo4, 3, 0, 0);
+        });
 
     </script>
 </body>
