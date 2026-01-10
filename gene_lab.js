@@ -133,6 +133,7 @@ export class GeneLab {
 
         for (let i = 0; i < this.iterations; i++) {
             this.applyConstraints();
+            this.applyBallCollisions();
         }
 
         this.updateLines();
@@ -169,6 +170,47 @@ export class GeneLab {
                 child.position.x += offsetX;
                 child.position.y += offsetY;
                 child.position.z += offsetZ;
+            }
+        }
+    }
+
+    applyBallCollisions() {
+        const ballRadius = 1;
+        const minDistance = ballRadius * 2;
+
+        for (let i = 0; i < this.draggableObjects.length; i++) {
+            for (let j = i + 1; j < this.draggableObjects.length; j++) {
+                const ball1 = this.draggableObjects[i];
+                const ball2 = this.draggableObjects[j];
+
+                const dx = ball2.position.x - ball1.position.x;
+                const dy = ball2.position.y - ball1.position.y;
+                const dz = ball2.position.z - ball1.position.z;
+                let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                if (dist < minDistance) {
+                    if (dist === 0) {
+                        dist = 0.0001;
+                    }
+
+                    const difference = minDistance - dist;
+                    const percent = difference / dist / 2;
+                    const offsetX = dx * percent;
+                    const offsetY = dy * percent;
+                    const offsetZ = dz * percent;
+
+                    if (!ball1.userData.pinned) {
+                        ball1.position.x -= offsetX;
+                        ball1.position.y -= offsetY;
+                        ball1.position.z -= offsetZ;
+                    }
+
+                    if (!ball2.userData.pinned) {
+                        ball2.position.x += offsetX;
+                        ball2.position.y += offsetY;
+                        ball2.position.z += offsetZ;
+                    }
+                }
             }
         }
     }
