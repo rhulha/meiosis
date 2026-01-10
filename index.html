@@ -27,12 +27,48 @@
         import { GeneLab } from './gene_lab.js';
 
         const lab = new GeneLab();
-        let maternal_ball1 = lab.addBall(-1, 0, 0, 0xff0000);
-        let paternal_ball1 = lab.addBall(1, 0, 0, 0x0000ff);
 
-        let maternal_ball2 = lab.addConnectedBall(maternal_ball1);
+        const yellow = 0xffff00;
+        const red = 0xff1493;
 
-        lab.addStickBall(maternal_ball2);
+        let temp = lab.addBall(-15, 5, 0, red);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addStickBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+
+        temp = lab.addBall(-5, 8, 0, yellow);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addStickBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+
+        temp = lab.addBall(5, 10, 0, yellow);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addStickBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+
+        temp = lab.addBall(10, -5, 0, red);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addStickBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+        temp = lab.addConnectedBall(temp);
+
     </script>
 </body>
 

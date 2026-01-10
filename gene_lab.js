@@ -70,7 +70,7 @@ export class GeneLab {
     }
 
     addConnectedBall(parent) {
-        const child = this.addBall(parent.position.x, parent.position.y-3, parent.position.z, parent.material.color);
+        const child = this.addBall(parent.position.x, parent.position.y-2, parent.position.z, parent.material.color);
 
         const dx = child.position.x - parent.position.x;
         const dy = child.position.y - parent.position.y;
