@@ -30,6 +30,9 @@ export class GeneLab {
         this.gravity = 0.0;
         this.friction = 0.99;
         this.iterations = 5;
+        this.animations = [];
+
+        this.popSound = new Audio('pop.wav');
 
         this.dragControls = new DragControls(this.draggableObjects, this.camera, this.renderer.domElement);
 
@@ -112,6 +115,184 @@ export class GeneLab {
         });
 
         return child;
+    }
+
+    popBall(x = 0, y = 0, z = 0, color) {
+        const ball = this.addBall(x, y, z, color);
+        ball.scale.set(0, 0, 0);
+
+        const startTime = Date.now();
+        const duration = 300;
+
+        this.popSound.currentTime = 0;
+        this.popSound.play();
+
+        this.animations.push({
+            update: () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const scale = this.easeOutElastic(progress);
+                ball.scale.set(scale, scale, scale);
+
+                return progress < 1;
+            }
+        });
+
+        return ball;
+    }
+
+    easeOutElastic(x) {
+        const c4 = (2 * Math.PI) / 3;
+        return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+    }
+
+    popConnectedBall(parent, delay = 0) {
+        setTimeout(() => {
+            const child = this.popBall(parent.position.x, parent.position.y-2, parent.position.z, parent.material.color);
+
+            const dx = child.position.x - parent.position.x;
+            const dy = child.position.y - parent.position.y;
+            const dz = child.position.z - parent.position.z;
+            const restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+            this.connections.push({
+                parent: parent,
+                child: child,
+                restLength: restLength,
+                line: null
+            });
+
+            child.userData.popCallback?.();
+        }, delay);
+    }
+
+    popStickBall(parent, delay = 0) {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const child = this.popBall(parent.position.x, parent.position.y-5, parent.position.z, parent.material.color);
+
+                const dx = child.position.x - parent.position.x;
+                const dy = child.position.y - parent.position.y;
+                const dz = child.position.z - parent.position.z;
+                const restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                const material = new THREE.LineBasicMaterial({ color: 0xffffff });
+                const points = [
+                    new THREE.Vector3(parent.position.x, parent.position.y, parent.position.z),
+                    new THREE.Vector3(child.position.x, child.position.y, child.position.z)
+                ];
+                const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(geometry, material);
+                this.scene.add(line);
+
+                this.connections.push({
+                    parent: parent,
+                    child: child,
+                    restLength: restLength,
+                    line: line
+                });
+
+                resolve(child);
+            }, delay);
+        });
+    }
+
+    addChromosome(pattern, color, x = 0, y = 0, z = 0) {
+        const balls = [];
+        let currentBall = this.addBall(x, y, z, color);
+        balls.push(currentBall);
+
+        let i = 1;
+        while (i < pattern.length) {
+            if (pattern[i] === '-' && pattern[i + 1] === 'o') {
+                currentBall = this.addStickBall(currentBall);
+                balls.push(currentBall);
+                i += 2;
+            } else if (pattern[i] === 'o') {
+                currentBall = this.addConnectedBall(currentBall);
+                balls.push(currentBall);
+                i++;
+            } else {
+                i++;
+            }
+        }
+
+        const chromosome = {
+            balls: balls,
+            pattern: pattern,
+            color: color
+        };
+
+        return chromosome;
+    }
+
+    async duplicateChromosome(chromosome, offsetX = 3, offsetY = 0, offsetZ = 0) {
+        const newBalls = [];
+        const pattern = chromosome.pattern;
+        const color = chromosome.color;
+
+        const firstBall = chromosome.balls[0];
+        const newFirst = this.popBall(
+            firstBall.position.x + offsetX,
+            firstBall.position.y + offsetY,
+            firstBall.position.z + offsetZ,
+            color
+        );
+        newBalls.push(newFirst);
+
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        let currentBall = newFirst;
+        let ballIndex = 1;
+        let i = 1;
+
+        while (i < pattern.length) {
+            if (pattern[i] === '-' && pattern[i + 1] === 'o') {
+                currentBall = await this.popStickBall(currentBall, 0);
+                newBalls.push(currentBall);
+                i += 2;
+                ballIndex++;
+            } else if (pattern[i] === 'o') {
+                currentBall = await new Promise((resolve) => {
+                    setTimeout(() => {
+                        const child = this.popBall(
+                            currentBall.position.x,
+                            currentBall.position.y - 2,
+                            currentBall.position.z,
+                            color
+                        );
+
+                        const dx = child.position.x - currentBall.position.x;
+                        const dy = child.position.y - currentBall.position.y;
+                        const dz = child.position.z - currentBall.position.z;
+                        const restLength = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+                        this.connections.push({
+                            parent: currentBall,
+                            child: child,
+                            restLength: restLength,
+                            line: null
+                        });
+
+                        resolve(child);
+                    }, 0);
+                });
+                newBalls.push(currentBall);
+                i++;
+                ballIndex++;
+            } else {
+                i++;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+
+        return {
+            balls: newBalls,
+            pattern: pattern,
+            color: color
+        };
     }
 
     updatePhysics() {
@@ -232,6 +413,14 @@ export class GeneLab {
 
     animate() {
         requestAnimationFrame(() => this.animate());
+
+        for (let i = this.animations.length - 1; i >= 0; i--) {
+            const stillRunning = this.animations[i].update();
+            if (!stillRunning) {
+                this.animations.splice(i, 1);
+            }
+        }
+
         this.updatePhysics();
         this.controls.update();
         this.renderer.render(this.scene, this.camera);

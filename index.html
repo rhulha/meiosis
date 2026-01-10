@@ -31,43 +31,10 @@
         const yellow = 0xffff00;
         const red = 0xff1493;
 
-        let temp = lab.addBall(-15, 5, 0, red);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addStickBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-
-        temp = lab.addBall(-5, 8, 0, yellow);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addStickBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-
-        temp = lab.addBall(5, 10, 0, yellow);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addStickBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-
-        temp = lab.addBall(10, -5, 0, red);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addStickBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
-        temp = lab.addConnectedBall(temp);
+        const chromo1 = lab.addChromosome("oo-oooo", red, -15, 5, 0);
+        const chromo2 = lab.addChromosome("ooo-ooooooo", yellow, -5, 8, 0);
+        const chromo3 = lab.addChromosome("oo-oooo", yellow, 5, 10, 0);
+        const chromo4 = lab.addChromosome("ooo-ooooooo", red, 10, -5, 0);
 
     </script>
 </body>
