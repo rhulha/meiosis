@@ -2,6 +2,8 @@ import { GeneEngine } from './gene_engine.js';
 
 export class GeneLab extends GeneEngine {
     addChromosome(pattern, color, x = 0, y = 0, z = 0) {
+        const numBalls = (pattern.match(/o/g) || []).length;
+        z = numBalls - 9;
         const balls = [];
         let currentBall = this.addBall(x, y, z, color);
         balls.push(currentBall);
@@ -170,23 +172,28 @@ export class GeneLab extends GeneEngine {
     async formTetrad4(chromo1, chromo2, chromo3, chromo4, spacing = 3, duration = 2000) {
         const startTime = Date.now();
 
-        const stickBall1 = this.findStickBall(chromo1);
-        const stickBall2 = this.findStickBall(chromo2);
-        const stickBall3 = this.findStickBall(chromo3);
-        const stickBall4 = this.findStickBall(chromo4);
+        const chromos = [chromo1, chromo2, chromo3, chromo4];
+        const stickBalls = chromos.map(c => this.findStickBall(c));
 
-        const initial1 = { x: stickBall1.position.x, y: stickBall1.position.y, z: stickBall1.position.z };
-        const initial2 = { x: stickBall2.position.x, y: stickBall2.position.y, z: stickBall2.position.z };
-        const initial3 = { x: stickBall3.position.x, y: stickBall3.position.y, z: stickBall3.position.z };
-        const initial4 = { x: stickBall4.position.x, y: stickBall4.position.y, z: stickBall4.position.z };
+        const initials = chromos.map(c => c.balls.map(ball => ({
+            x: ball.position.x, y: ball.position.y, z: ball.position.z
+        })));
 
-        const centerX = (initial1.x + initial2.x + initial3.x + initial4.x) / 4;
-        const centerY = (initial1.y + initial2.y + initial3.y + initial4.y) / 4;
+        const stickInitials = stickBalls.map(sb => ({ x: sb.position.x, y: sb.position.y, z: sb.position.z }));
 
-        stickBall1.userData.pinned = true;
-        stickBall2.userData.pinned = true;
-        stickBall3.userData.pinned = true;
-        stickBall4.userData.pinned = true;
+        const centerX = stickInitials.reduce((s, p) => s + p.x, 0) / 4;
+        const centerY = stickInitials.reduce((s, p) => s + p.y, 0) / 4;
+        const centerZ = stickInitials.reduce((s, p) => s + p.z, 0) / 4;
+        const zSpread = spacing * 0.6;
+
+        const targets = [
+            { x: centerX - spacing * 0.5, y: centerY, z: centerZ - zSpread * 0.5 },
+            { x: centerX + spacing * 0.5, y: centerY, z: centerZ - zSpread * 0.5 },
+            { x: centerX - spacing * 0.5, y: centerY, z: centerZ + zSpread * 0.5 },
+            { x: centerX + spacing * 0.5, y: centerY, z: centerZ + zSpread * 0.5 },
+        ];
+
+        chromos.forEach(c => c.balls.forEach(ball => ball.userData.pinned = true));
 
         return new Promise((resolve) => {
             const animate = () => {
@@ -194,41 +201,28 @@ export class GeneLab extends GeneEngine {
                 const progress = Math.min(elapsed / duration, 1);
                 const eased = this.easeInOutCubic(progress);
 
-                const target1X = centerX - spacing * 1.5;
-                const target1Y = centerY;
-                stickBall1.position.x = initial1.x + (target1X - initial1.x) * eased;
-                stickBall1.position.y = initial1.y + (target1Y - initial1.y) * eased;
-                stickBall1.userData.oldX = stickBall1.position.x;
-                stickBall1.userData.oldY = stickBall1.position.y;
+                chromos.forEach((chromo, ci) => {
+                    const stickInit = stickInitials[ci];
+                    const target = targets[ci];
+                    const dx = (target.x - stickInit.x) * eased;
+                    const dy = (target.y - stickInit.y) * eased;
+                    const dz = (target.z - stickInit.z) * eased;
 
-                const target2X = centerX - spacing * 0.5;
-                const target2Y = centerY;
-                stickBall2.position.x = initial2.x + (target2X - initial2.x) * eased;
-                stickBall2.position.y = initial2.y + (target2Y - initial2.y) * eased;
-                stickBall2.userData.oldX = stickBall2.position.x;
-                stickBall2.userData.oldY = stickBall2.position.y;
-
-                const target3X = centerX + spacing * 0.5;
-                const target3Y = centerY;
-                stickBall3.position.x = initial3.x + (target3X - initial3.x) * eased;
-                stickBall3.position.y = initial3.y + (target3Y - initial3.y) * eased;
-                stickBall3.userData.oldX = stickBall3.position.x;
-                stickBall3.userData.oldY = stickBall3.position.y;
-
-                const target4X = centerX + spacing * 1.5;
-                const target4Y = centerY;
-                stickBall4.position.x = initial4.x + (target4X - initial4.x) * eased;
-                stickBall4.position.y = initial4.y + (target4Y - initial4.y) * eased;
-                stickBall4.userData.oldX = stickBall4.position.x;
-                stickBall4.userData.oldY = stickBall4.position.y;
+                    chromo.balls.forEach((ball, bi) => {
+                        const init = initials[ci][bi];
+                        ball.position.x = init.x + dx;
+                        ball.position.y = init.y + dy;
+                        ball.position.z = init.z + dz;
+                        ball.userData.oldX = ball.position.x;
+                        ball.userData.oldY = ball.position.y;
+                        ball.userData.oldZ = ball.position.z;
+                    });
+                });
 
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    stickBall1.userData.pinned = false;
-                    stickBall2.userData.pinned = false;
-                    stickBall3.userData.pinned = false;
-                    stickBall4.userData.pinned = false;
+                    chromos.forEach(c => c.balls.forEach(ball => ball.userData.pinned = false));
                     resolve();
                 }
             };
