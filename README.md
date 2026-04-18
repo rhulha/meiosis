@@ -1,4 +1,4 @@
-# Meiosis2
+# Meiosis
 
 3D chromosome simulation using Three.js with physics-based animation.
 
