@@ -2,6 +2,10 @@
 
 3D chromosome simulation using Three.js with physics-based animation.
 
+## Preview
+
+![Meiosis Simulation](./example.jpg)
+
 ## Structure
 
 - **gene_engine.js** - Base 3D engine (scene, physics, ball creation, animations)
