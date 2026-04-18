@@ -290,6 +290,8 @@ export class GeneEngine {
                 let dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
                 if (dist < minDistance) {
+                    if (ball1.userData.tetradId !== undefined && ball1.userData.tetradId === ball2.userData.tetradId) continue;
+
                     if (dist === 0) {
                         dist = 0.0001;
                     }

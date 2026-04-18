@@ -72,10 +72,10 @@
 
             if (state === 'initial') {
                 btn.textContent = 'Duplicating...';
-                chromo1_copy = await lab.duplicateChromosome(chromo1, 3, 0, 0);
-                chromo2_copy = await lab.duplicateChromosome(chromo2, 3, 0, 0);
-                chromo3_copy = await lab.duplicateChromosome(chromo3, 3, 0, 0);
-                chromo4_copy = await lab.duplicateChromosome(chromo4, 3, 0, 0);
+                chromo1_copy = await lab.duplicateChromosome(chromo1, 2.2, 0, 0);
+                chromo2_copy = await lab.duplicateChromosome(chromo2, 2.2, 0, 0);
+                chromo3_copy = await lab.duplicateChromosome(chromo3, 2.2, 0, 0);
+                chromo4_copy = await lab.duplicateChromosome(chromo4, 2.2, 0, 0);
 
                 state = 'duplicated';
                 btn.textContent = 'Form Tetrads';

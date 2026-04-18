@@ -170,8 +170,6 @@ export class GeneLab extends GeneEngine {
     }
 
     async formTetrad4(chromo1, chromo2, chromo3, chromo4, spacing = 3, duration = 2000) {
-        const startTime = Date.now();
-
         const chromos = [chromo1, chromo2, chromo3, chromo4];
         const stickBalls = chromos.map(c => this.findStickBall(c));
 
@@ -196,6 +194,7 @@ export class GeneLab extends GeneEngine {
         chromos.forEach(c => c.balls.forEach(ball => ball.userData.pinned = true));
 
         return new Promise((resolve) => {
+            const startTime = Date.now();
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1);
@@ -222,11 +221,14 @@ export class GeneLab extends GeneEngine {
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    chromos.forEach(c => c.balls.forEach(ball => ball.userData.pinned = false));
+                    const tetradId = Date.now();
+                    chromos.forEach(c => c.balls.forEach(ball => {
+                        ball.userData.pinned = false;
+                        ball.userData.tetradId = tetradId;
+                    }));
                     resolve();
                 }
             };
-
             animate();
         });
     }
