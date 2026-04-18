@@ -72,18 +72,22 @@
 
             if (state === 'initial') {
                 btn.textContent = 'Duplicating...';
-                chromo1_copy = await lab.duplicateChromosome(chromo1, 2.2, 0, 0);
-                chromo2_copy = await lab.duplicateChromosome(chromo2, 2.2, 0, 0);
-                chromo3_copy = await lab.duplicateChromosome(chromo3, 2.2, 0, 0);
-                chromo4_copy = await lab.duplicateChromosome(chromo4, 2.2, 0, 0);
+                [chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy] = await Promise.all([
+                    lab.duplicateChromosome(chromo1, 2.2, 0, 0, 200),
+                    lab.duplicateChromosome(chromo2, 2.2, 0, 0, 200),
+                    lab.duplicateChromosome(chromo3, 2.2, 0, 0, 200),
+                    lab.duplicateChromosome(chromo4, 2.2, 0, 0, 200)
+                ]);
 
                 state = 'duplicated';
                 btn.textContent = 'Form Tetrads';
                 btn.disabled = false;
             } else if (state === 'duplicated') {
                 btn.textContent = 'Forming Tetrads...';
-                await lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy, 2.2);
-                await lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy, 2.2);
+                await Promise.all([
+                    lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy, 2.2),
+                    lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy, 2.2)
+                ]);
 
                 state = 'tetrads_formed';
                 btn.textContent = 'Crossover';

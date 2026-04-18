@@ -139,10 +139,10 @@ export class GeneEngine {
         const startTime = Date.now();
         const duration = 300;
 
-        if (Math.random() > 0.7) {
+        //if (Math.random() > 0.7) {
             this.popSound.currentTime = 0;
             this.popSound.play();
-        }
+        //}
 
         this.animations.push({
             update: () => {

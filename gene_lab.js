@@ -32,7 +32,7 @@ export class GeneLab extends GeneEngine {
         return chromosome;
     }
 
-    async duplicateChromosome(chromosome, offsetX = 3, offsetY = 0, offsetZ = 0) {
+    async duplicateChromosome(chromosome, offsetX = 3, offsetY = 0, offsetZ = 0, delay = 100) {
         const newBalls = [];
         const pattern = chromosome.pattern;
         const color = chromosome.color;
@@ -46,7 +46,7 @@ export class GeneLab extends GeneEngine {
         );
         newBalls.push(newFirst);
 
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, delay));
 
         let currentBall = newFirst;
         let ballIndex = 1;
@@ -90,7 +90,7 @@ export class GeneLab extends GeneEngine {
                 i++;
             }
 
-            await new Promise(resolve => setTimeout(resolve, 100));
+            await new Promise(resolve => setTimeout(resolve, delay));
         }
 
         return {
@@ -158,8 +158,9 @@ export class GeneLab extends GeneEngine {
     }
 
     async crossoverTetrad(sistersA, sistersB, duration = 2000) {
-        const chromoA = Math.random() < 0.5 ? sistersA[0] : sistersA[1];
-        const chromoB = Math.random() < 0.5 ? sistersB[0] : sistersB[1];
+        const diagonal = Math.random() < 0.5;
+        const chromoA = diagonal ? sistersA[0] : sistersA[1];
+        const chromoB = diagonal ? sistersB[1] : sistersB[0];
 
         const maxIndex = Math.min(chromoA.balls.length, chromoB.balls.length) - 1;
         const crossoverIndex = Math.floor(Math.random() * (maxIndex - 1)) + 1;
