@@ -14,12 +14,16 @@ export class GeneEngine {
 
         this.camera.position.z = 25;
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
         this.scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-        directionalLight.position.set(5, 5, 5);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 2.0);
+        directionalLight.position.set(2, 15, 25);
         this.scene.add(directionalLight);
+
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.2);
+        fillLight.position.set(-10, -5, 5);
+        this.scene.add(fillLight);
 
         this.controls = new OrbitControls(this.camera, this.renderer.domElement);
         this.controls.enableDamping = true;
@@ -68,7 +72,9 @@ export class GeneEngine {
         const material = new THREE.MeshStandardMaterial({
             color: color,
             emissive: color,
-            emissiveIntensity: 0.3
+            emissiveIntensity: 0.14,
+            roughness: 0.4,
+            metalness: 0.1
         });
         const sphere = new THREE.Mesh(geometry, material);
         sphere.position.set(x, y, z);
