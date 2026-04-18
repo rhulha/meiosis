@@ -73,10 +73,10 @@
             if (state === 'initial') {
                 btn.textContent = 'Duplicating...';
                 [chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy] = await Promise.all([
-                    lab.duplicateChromosome(chromo1, 2.2, 0, 0, 200),
-                    lab.duplicateChromosome(chromo2, 2.2, 0, 0, 200),
-                    lab.duplicateChromosome(chromo3, 2.2, 0, 0, 200),
-                    lab.duplicateChromosome(chromo4, 2.2, 0, 0, 200)
+                    lab.duplicateChromosome(chromo1, 2.2, 0, 0, 150),
+                    lab.duplicateChromosome(chromo2, 2.2, 0, 0, 150),
+                    lab.duplicateChromosome(chromo3, 2.2, 0, 0, 150),
+                    lab.duplicateChromosome(chromo4, 2.2, 0, 0, 150)
                 ]);
 
                 state = 'duplicated';
