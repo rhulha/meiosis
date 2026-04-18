@@ -86,6 +86,16 @@
                 await lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy, 2.2);
 
                 state = 'tetrads_formed';
+                btn.textContent = 'Crossover';
+                btn.disabled = false;
+            } else if (state === 'tetrads_formed') {
+                btn.textContent = 'Crossing Over...';
+                await Promise.all([
+                    lab.crossoverTetrad([chromo1, chromo1_copy], [chromo3, chromo3_copy]),
+                    lab.crossoverTetrad([chromo2, chromo2_copy], [chromo4, chromo4_copy])
+                ]);
+
+                state = 'crossover_done';
                 btn.textContent = 'Done';
                 btn.disabled = false;
             }

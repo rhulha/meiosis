@@ -157,6 +157,84 @@ export class GeneLab extends GeneEngine {
         return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
     }
 
+    async crossoverTetrad(sistersA, sistersB, duration = 2000) {
+        const chromoA = Math.random() < 0.5 ? sistersA[0] : sistersA[1];
+        const chromoB = Math.random() < 0.5 ? sistersB[0] : sistersB[1];
+
+        const maxIndex = Math.min(chromoA.balls.length, chromoB.balls.length) - 1;
+        const crossoverIndex = Math.floor(Math.random() * (maxIndex - 1)) + 1;
+
+        const tailA = chromoA.balls.slice(crossoverIndex);
+        const tailB = chromoB.balls.slice(crossoverIndex);
+
+        const initA = tailA.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
+        const initB = tailB.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
+
+        const colorA = chromoA.color;
+        const colorB = chromoB.color;
+
+        const allBalls = [...sistersA, ...sistersB].flatMap(c => c.balls);
+        allBalls.forEach(b => b.userData.pinned = true);
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+
+                tailA.forEach((ball, i) => {
+                    ball.position.x = initA[i].x + (initB[i].x - initA[i].x) * eased;
+                    ball.position.y = initA[i].y + (initB[i].y - initA[i].y) * eased;
+                    ball.position.z = initA[i].z + (initB[i].z - initA[i].z) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                    ball.userData.oldZ = ball.position.z;
+                });
+
+                tailB.forEach((ball, i) => {
+                    ball.position.x = initB[i].x + (initA[i].x - initB[i].x) * eased;
+                    ball.position.y = initB[i].y + (initA[i].y - initB[i].y) * eased;
+                    ball.position.z = initB[i].z + (initA[i].z - initB[i].z) * eased;
+                    ball.userData.oldX = ball.position.x;
+                    ball.userData.oldY = ball.position.y;
+                    ball.userData.oldZ = ball.position.z;
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    const connA = this.connections.find(c =>
+                        c.parent === chromoA.balls[crossoverIndex - 1] &&
+                        c.child === chromoA.balls[crossoverIndex]
+                    );
+                    const connB = this.connections.find(c =>
+                        c.parent === chromoB.balls[crossoverIndex - 1] &&
+                        c.child === chromoB.balls[crossoverIndex]
+                    );
+                    if (connA) connA.child = chromoB.balls[crossoverIndex];
+                    if (connB) connB.child = chromoA.balls[crossoverIndex];
+
+                    chromoA.balls = [...chromoA.balls.slice(0, crossoverIndex), ...tailB];
+                    chromoB.balls = [...chromoB.balls.slice(0, crossoverIndex), ...tailA];
+
+                    chromoA.balls.slice(crossoverIndex).forEach(ball => {
+                        ball.material.color.setHex(colorB);
+                        ball.material.emissive.setHex(colorB);
+                    });
+                    chromoB.balls.slice(crossoverIndex).forEach(ball => {
+                        ball.material.color.setHex(colorA);
+                        ball.material.emissive.setHex(colorA);
+                    });
+
+                    allBalls.forEach(b => b.userData.pinned = false);
+                    resolve();
+                }
+            };
+            animate();
+        });
+    }
+
     findStickBall(chromosome) {
         for (let ball of chromosome.balls) {
             const connection = this.connections.find(conn =>
