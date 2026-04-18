@@ -182,7 +182,7 @@ export class GeneLab extends GeneEngine {
         const centerX = stickInitials.reduce((s, p) => s + p.x, 0) / 4;
         const centerY = stickInitials.reduce((s, p) => s + p.y, 0) / 4;
         const centerZ = stickInitials.reduce((s, p) => s + p.z, 0) / 4;
-        const zSpread = spacing * 0.6;
+        const zSpread = spacing;
 
         const targets = [
             { x: centerX - spacing * 0.5, y: centerY, z: centerZ - zSpread * 0.5 },

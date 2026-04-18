@@ -82,8 +82,8 @@
                 btn.disabled = false;
             } else if (state === 'duplicated') {
                 btn.textContent = 'Forming Tetrads...';
-                await lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy);
-                await lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy);
+                await lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy, 2.2);
+                await lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy, 2.2);
 
                 state = 'tetrads_formed';
                 btn.textContent = 'Done';
