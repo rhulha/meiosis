@@ -1,0 +1,13 @@
+Meiosis Steps
+
+MEIOSIS I (Reductive Division)
+1. Prophase I    - Chromosomes condense; homologs pair up (synapsis); crossing over occurs between non-sister chromatids
+2. Metaphase I   - Homologous pairs align at the cell equator (metaphase plate)
+3. Anaphase I    - Homologous pairs pulled apart to opposite poles (sister chromatids stay together)
+4. Telophase I   - Two haploid cells form, each with duplicated chromosomes
+
+MEIOSIS II (Equational Division)
+5. Prophase II   - Chromosomes condense again in both cells
+6. Metaphase II  - Individual chromosomes align at the metaphase plate
+7. Anaphase II   - Sister chromatids pulled apart to opposite poles
+8. Telophase II  - Four haploid daughter cells (gametes) form, each with unique genetic combinations
