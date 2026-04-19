@@ -138,8 +138,21 @@
                     [chromo3, chromo3_copy, chromo4, chromo4_copy]
                 );
                 state = 'telophase1_done';
-                btn.textContent = 'Done';
+                btn.textContent = 'Meiosis II';
                 stepLabel.textContent = 'Telophase I — two haploid cells formed';
+                btn.disabled = false;
+            } else if (state === 'telophase1_done') {
+                btn.textContent = 'Dividing...';
+                stepLabel.textContent = 'Meiosis II — sister chromatids separating';
+                await lab.meiosisII(
+                    membraneA, membraneB,
+                    [[chromo1, chromo1_copy], [chromo2, chromo2_copy]],
+                    [[chromo3, chromo3_copy], [chromo4, chromo4_copy]],
+                    15, 3000
+                );
+                state = 'done';
+                btn.textContent = 'Done';
+                stepLabel.textContent = 'Meiosis complete — four unique haploid gametes formed';
                 btn.disabled = false;
             }
         });

@@ -460,7 +460,7 @@ export class GeneLab extends GeneEngine {
         if (idx !== -1) this.animations.splice(idx, 1);
     }
 
-    async cytokinesis(oldMembrane, groupA, groupB, duration = 2000) {
+    async cytokinesis(oldMembrane, groupA, groupB, separation = 10, duration = 2000) {
         const memA = this.addMembrane(groupA);
         const memB = this.addMembrane(groupB);
         memA.mesh.material.opacity = 0;
@@ -468,6 +468,28 @@ export class GeneLab extends GeneEngine {
 
         const startOpacity = oldMembrane.mesh.material.opacity;
         const targetOpacity = 0.12;
+
+        const ballsA = groupA.flatMap(c => c.balls);
+        const ballsB = groupB.flatMap(c => c.balls);
+        const allBalls = [...ballsA, ...ballsB];
+
+        allBalls.forEach(b => b.userData.pinned = true);
+
+        const centroidA = { x: 0, y: 0, z: 0 };
+        const centroidB = { x: 0, y: 0, z: 0 };
+        for (const b of ballsA) { centroidA.x += b.position.x; centroidA.y += b.position.y; centroidA.z += b.position.z; }
+        for (const b of ballsB) { centroidB.x += b.position.x; centroidB.y += b.position.y; centroidB.z += b.position.z; }
+        centroidA.x /= ballsA.length; centroidA.y /= ballsA.length; centroidA.z /= ballsA.length;
+        centroidB.x /= ballsB.length; centroidB.y /= ballsB.length; centroidB.z /= ballsB.length;
+
+        let dx = centroidB.x - centroidA.x;
+        let dy = centroidB.y - centroidA.y;
+        let dz = centroidB.z - centroidA.z;
+        const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+        dx /= len; dy /= len; dz /= len;
+
+        const initialsA = ballsA.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
+        const initialsB = ballsB.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
 
         return new Promise((resolve) => {
             const startTime = Date.now();
@@ -480,11 +502,106 @@ export class GeneLab extends GeneEngine {
                 memA.mesh.material.opacity = targetOpacity * eased;
                 memB.mesh.material.opacity = targetOpacity * eased;
 
+                const offset = separation * 0.5 * eased;
+                ballsA.forEach((b, i) => {
+                    b.position.x = initialsA[i].x - dx * offset;
+                    b.position.y = initialsA[i].y - dy * offset;
+                    b.position.z = initialsA[i].z - dz * offset;
+                    b.userData.oldX = b.position.x; b.userData.oldY = b.position.y; b.userData.oldZ = b.position.z;
+                });
+                ballsB.forEach((b, i) => {
+                    b.position.x = initialsB[i].x + dx * offset;
+                    b.position.y = initialsB[i].y + dy * offset;
+                    b.position.z = initialsB[i].z + dz * offset;
+                    b.userData.oldX = b.position.x; b.userData.oldY = b.position.y; b.userData.oldZ = b.position.z;
+                });
+
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
+                    allBalls.forEach(b => b.userData.pinned = false);
                     this.removeMembrane(oldMembrane);
                     resolve([memA, memB]);
+                }
+            };
+            animate();
+        });
+    }
+
+    removeStickConnection(chromosome) {
+        for (const ball of chromosome.balls) {
+            const idx = this.connections.findIndex(c =>
+                (c.parent === ball || c.child === ball) && c.line !== null
+            );
+            if (idx !== -1) {
+                const conn = this.connections[idx];
+                this.scene.remove(conn.line);
+                conn.line.geometry.dispose();
+                conn.line.material.dispose();
+                conn.line = null;
+                return;
+            }
+        }
+    }
+
+    async meiosisII(memA, memB, sisterPairsA, sisterPairsB, separation = 15, duration = 3000) {
+        const allPairs = [...sisterPairsA, ...sisterPairsB];
+        const allChromos = allPairs.flat();
+        const allBalls = allChromos.flatMap(c => c.balls);
+
+        allBalls.forEach(b => b.userData.pinned = true);
+
+        allChromos.forEach(c => this.removeStickConnection(c));
+
+        const initials = allChromos.map(c => c.balls.map(b => ({
+            x: b.position.x, y: b.position.y, z: b.position.z
+        })));
+
+        const dirs = new Map();
+        for (const [a, b] of allPairs) {
+            dirs.set(a, 1);
+            dirs.set(b, -1);
+        }
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+                const offset = separation * 0.5 * eased;
+
+                allChromos.forEach((chromo, ci) => {
+                    const dir = dirs.get(chromo);
+                    chromo.balls.forEach((ball, bi) => {
+                        const init = initials[ci][bi];
+                        ball.position.y = init.y + dir * offset;
+                        ball.userData.oldX = ball.position.x;
+                        ball.userData.oldY = ball.position.y;
+                        ball.userData.oldZ = ball.position.z;
+                    });
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    allBalls.forEach(b => b.userData.pinned = false);
+
+                    const gameteGroupsA = [
+                        sisterPairsA.map(p => p[0]),
+                        sisterPairsA.map(p => p[1])
+                    ];
+                    const gameteGroupsB = [
+                        sisterPairsB.map(p => p[0]),
+                        sisterPairsB.map(p => p[1])
+                    ];
+
+                    Promise.all([
+                        this.cytokinesis(memA, gameteGroupsA[0], gameteGroupsA[1]),
+                        this.cytokinesis(memB, gameteGroupsB[0], gameteGroupsB[1])
+                    ]).then(([[m1, m2], [m3, m4]]) => {
+                        resolve([m1, m2, m3, m4]);
+                    });
                 }
             };
             animate();
