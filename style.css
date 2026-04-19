@@ -28,6 +28,12 @@ body {
     transform: translateX(-50%) scale(0.95);
 }
 
+#duplicateBtn:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 #titleBox {
     position: fixed;
     top: 16px;

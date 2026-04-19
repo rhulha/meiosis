@@ -7,9 +7,9 @@ export class GeneLab extends GeneEngine {
         ball.material.emissive.set(color);
     }
 
-    addChromosome(pattern, color, x = 0, y = 0, z = 0) {
+    addChromosome(pattern, color, x = 0, y = 0) {
         const numBalls = (pattern.match(/o/g) || []).length;
-        z = numBalls - 9;
+        const z = numBalls - 9;
         const balls = [];
         let currentBall = this.addBall(x, y, z, color);
         balls.push(currentBall);
@@ -104,59 +104,6 @@ export class GeneLab extends GeneEngine {
             pattern: pattern,
             color: color
         };
-    }
-
-    async formTetrad(chromo1, chromo2, spacing = 0.5, duration = 2000) {
-        const startTime = Date.now();
-
-        const initialPositions1 = chromo1.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
-
-        const initialPositions2 = chromo2.balls.map(ball => ({
-            x: ball.position.x,
-            y: ball.position.y,
-            z: ball.position.z
-        }));
-
-        const centerX = (initialPositions1[0].x + initialPositions2[0].x) / 2;
-
-        chromo1.balls.forEach(ball => ball.userData.pinned = true);
-        chromo2.balls.forEach(ball => ball.userData.pinned = true);
-
-        return new Promise((resolve) => {
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const eased = this.easeInOutCubic(progress);
-
-                chromo1.balls.forEach((ball, i) => {
-                    const initial = initialPositions1[i];
-                    const targetX = centerX - spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.userData.oldX = ball.position.x;
-                });
-
-                chromo2.balls.forEach((ball, i) => {
-                    const initial = initialPositions2[i];
-                    const targetX = centerX + spacing;
-                    ball.position.x = initial.x + (targetX - initial.x) * eased;
-                    ball.userData.oldX = ball.position.x;
-                });
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    chromo1.balls.forEach(ball => ball.userData.pinned = false);
-                    chromo2.balls.forEach(ball => ball.userData.pinned = false);
-                    resolve();
-                }
-            };
-
-            animate();
-        });
     }
 
     easeInOutCubic(x) {
