@@ -376,6 +376,47 @@ export class GeneLab extends GeneEngine {
         return membrane;
     }
 
+    async anaphaseI(groupA, groupB, separation = 20, duration = 3000) {
+        const allChromos = [...groupA, ...groupB];
+        const allBalls = allChromos.flatMap(c => c.balls);
+
+        allBalls.forEach(b => b.userData.pinned = true);
+
+        const initials = allChromos.map(c => c.balls.map(b => ({
+            x: b.position.x, y: b.position.y, z: b.position.z
+        })));
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+
+                const offset = separation * 0.5 * eased;
+
+                allChromos.forEach((chromo, ci) => {
+                    const dir = groupA.includes(chromo) ? 1 : -1;
+                    chromo.balls.forEach((ball, bi) => {
+                        const init = initials[ci][bi];
+                        ball.position.x = init.x + dir * offset;
+                        ball.userData.oldX = ball.position.x;
+                        ball.userData.oldY = ball.position.y;
+                        ball.userData.oldZ = ball.position.z;
+                    });
+                });
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    allBalls.forEach(b => b.userData.pinned = false);
+                    resolve();
+                }
+            };
+            animate();
+        });
+    }
+
     updateMembraneTransform(membrane) {
         const balls = membrane.chromosomes.flatMap(c => c.balls);
         if (balls.length === 0) return;

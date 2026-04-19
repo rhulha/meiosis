@@ -234,8 +234,20 @@
                 ]);
 
                 state = 'crossover_done';
-                btn.textContent = 'Done';
+                btn.textContent = 'Anaphase I';
                 stepLabel.textContent = 'Prophase I — crossover complete, genetic recombination done';
+                btn.disabled = false;
+            } else if (state === 'crossover_done') {
+                btn.textContent = 'Separating...';
+                stepLabel.textContent = 'Anaphase I — homologous pairs pulling apart';
+                await lab.anaphaseI(
+                    [chromo1, chromo1_copy, chromo2, chromo2_copy],
+                    [chromo3, chromo3_copy, chromo4, chromo4_copy],
+                    25, 3000
+                );
+                state = 'anaphase1_done';
+                btn.textContent = 'Done';
+                stepLabel.textContent = 'Anaphase I — homologs at opposite poles, sister chromatids intact';
                 btn.disabled = false;
             }
         });
