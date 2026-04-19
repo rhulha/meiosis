@@ -1,0 +1,11 @@
+Here are a few things that could improve the project:
+
+Add Metaphase I — We're currently skipping it. After crossover, the tetrads should line up along the cell equator before Anaphase I pulls them apart. This is a real gap in the biology.
+
+Add a "Restart" option — Once meiosis is complete the button just says "Done" with nothing to do. A restart/reset would let students replay the whole sequence.
+
+Add spindle fibers — During Anaphase I and Meiosis II, thin lines pulling chromosomes to the poles would make it clearer why things move apart, and it's a key visual students expect to see.
+
+Auto-zoom the camera — As cells spread apart (especially after Meiosis II), chromosomes get small on screen. The camera could gradually pull back to keep everything framed.
+
+Add a cleavage furrow visual — During cytokinesis, the membrane currently just fades and splits. An elongation/pinching effect would better show what's actually happening in cell division.

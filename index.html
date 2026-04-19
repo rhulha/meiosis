@@ -152,9 +152,11 @@
                     15, 3000
                 );
                 state = 'done';
-                btn.textContent = 'Done';
+                btn.textContent = 'Restart';
                 stepLabel.textContent = 'Meiosis complete — four unique haploid gametes formed';
                 btn.disabled = false;
+            } else if (state === 'done') {
+                location.reload();
             }
         });
 
