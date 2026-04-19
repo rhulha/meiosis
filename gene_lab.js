@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { GeneEngine } from './gene_engine.js';
 
 export class GeneLab extends GeneEngine {
@@ -348,5 +349,63 @@ export class GeneLab extends GeneEngine {
             };
             animate();
         });
+    }
+
+    addMembrane(chromosomes, padding = 6) {
+        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        const material = new THREE.MeshPhysicalMaterial({
+            color: 0x88bbff,
+            transparent: true,
+            opacity: 0.12,
+            roughness: 0.3,
+            metalness: 0.0,
+            side: THREE.DoubleSide,
+            depthWrite: false,
+        });
+        const mesh = new THREE.Mesh(geometry, material);
+        this.scene.add(mesh);
+
+        const membrane = { mesh, chromosomes, padding };
+        this.updateMembraneTransform(membrane);
+        this.animations.push({
+            update: () => {
+                this.updateMembraneTransform(membrane);
+                return true;
+            }
+        });
+        return membrane;
+    }
+
+    updateMembraneTransform(membrane) {
+        const balls = membrane.chromosomes.flatMap(c => c.balls);
+        if (balls.length === 0) return;
+
+        let cx = 0, cy = 0, cz = 0;
+        for (const b of balls) {
+            cx += b.position.x;
+            cy += b.position.y;
+            cz += b.position.z;
+        }
+        cx /= balls.length;
+        cy /= balls.length;
+        cz /= balls.length;
+
+        let maxDist = 0;
+        for (const b of balls) {
+            const dx = b.position.x - cx;
+            const dy = b.position.y - cy;
+            const dz = b.position.z - cz;
+            const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            if (dist > maxDist) maxDist = dist;
+        }
+
+        const r = maxDist + membrane.padding;
+        const m = membrane.mesh;
+        m.position.x += (cx - m.position.x) * 0.1;
+        m.position.y += (cy - m.position.y) * 0.1;
+        m.position.z += (cz - m.position.z) * 0.1;
+        m.scale.x += (r - m.scale.x) * 0.1;
+        m.scale.y += (r - m.scale.y) * 0.1;
+        m.scale.z += (r - m.scale.z) * 0.1;
     }
 }
