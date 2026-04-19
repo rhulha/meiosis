@@ -135,7 +135,8 @@
                 [membraneA, membraneB] = await lab.cytokinesis(
                     membrane,
                     [chromo1, chromo1_copy, chromo2, chromo2_copy],
-                    [chromo3, chromo3_copy, chromo4, chromo4_copy]
+                    [chromo3, chromo3_copy, chromo4, chromo4_copy],
+                    20
                 );
                 state = 'telophase1_done';
                 btn.textContent = 'Meiosis II';

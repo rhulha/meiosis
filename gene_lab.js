@@ -597,8 +597,8 @@ export class GeneLab extends GeneEngine {
                     ];
 
                     Promise.all([
-                        this.cytokinesis(memA, gameteGroupsA[0], gameteGroupsA[1]),
-                        this.cytokinesis(memB, gameteGroupsB[0], gameteGroupsB[1])
+                        this.cytokinesis(memA, gameteGroupsA[0], gameteGroupsA[1], 30),
+                        this.cytokinesis(memB, gameteGroupsB[0], gameteGroupsB[1], 30)
                     ]).then(([[m1, m2], [m3, m4]]) => {
                         resolve([m1, m2, m3, m4]);
                     });

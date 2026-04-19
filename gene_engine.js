@@ -12,7 +12,7 @@ export class GeneEngine {
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.container.appendChild(this.renderer.domElement);
 
-        this.camera.position.z = 25;
+        this.camera.position.z = 60;
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.1);
         this.scene.add(ambientLight);
