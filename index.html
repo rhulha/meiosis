@@ -188,6 +188,15 @@
         let state = 'initial';
         const btn = document.getElementById('duplicateBtn');
 
+        btn.disabled = true;
+        stepLabel.textContent = 'Prophase I — homologs pairing';
+        await Promise.all([
+            lab.formX2(chromo1, chromo3),
+            lab.formX2(chromo2, chromo4)
+        ]);
+        stepLabel.textContent = 'Interphase — homologs paired as bivalents';
+        btn.disabled = false;
+
         btn.addEventListener('click', async () => {
             btn.disabled = true;
 
