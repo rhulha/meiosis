@@ -367,12 +367,14 @@ export class GeneLab extends GeneEngine {
 
         const membrane = { mesh, chromosomes, padding };
         this.updateMembraneTransform(membrane);
-        this.animations.push({
+        const anim = {
+            membrane,
             update: () => {
                 this.updateMembraneTransform(membrane);
                 return true;
             }
-        });
+        };
+        this.animations.push(anim);
         return membrane;
     }
 
@@ -448,5 +450,44 @@ export class GeneLab extends GeneEngine {
         m.scale.x += (r - m.scale.x) * 0.1;
         m.scale.y += (r - m.scale.y) * 0.1;
         m.scale.z += (r - m.scale.z) * 0.1;
+    }
+
+    removeMembrane(membrane) {
+        this.scene.remove(membrane.mesh);
+        membrane.mesh.geometry.dispose();
+        membrane.mesh.material.dispose();
+        const idx = this.animations.findIndex(a => a.membrane === membrane);
+        if (idx !== -1) this.animations.splice(idx, 1);
+    }
+
+    async cytokinesis(oldMembrane, groupA, groupB, duration = 2000) {
+        const memA = this.addMembrane(groupA);
+        const memB = this.addMembrane(groupB);
+        memA.mesh.material.opacity = 0;
+        memB.mesh.material.opacity = 0;
+
+        const startOpacity = oldMembrane.mesh.material.opacity;
+        const targetOpacity = 0.12;
+
+        return new Promise((resolve) => {
+            const startTime = Date.now();
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = this.easeInOutCubic(progress);
+
+                oldMembrane.mesh.material.opacity = startOpacity * (1 - eased);
+                memA.mesh.material.opacity = targetOpacity * eased;
+                memB.mesh.material.opacity = targetOpacity * eased;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    this.removeMembrane(oldMembrane);
+                    resolve([memA, memB]);
+                }
+            };
+            animate();
+        });
     }
 }

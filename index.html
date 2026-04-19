@@ -5,128 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GeneLab Demo</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-        }
-
-        #duplicateBtn {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            transition: background-color 0.3s;
-        }
-
-        #duplicateBtn:hover {
-            background-color: #45a049;
-        }
-
-        #duplicateBtn:active {
-            transform: translateX(-50%) scale(0.95);
-        }
-
-        #titleBox {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            text-align: center;
-            font-family: sans-serif;
-            pointer-events: none;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.8);
-        }
-
-        #titleBox h1 {
-            margin: 0;
-            font-size: 22px;
-            color: #ffffff;
-            letter-spacing: 1px;
-        }
-
-        #currentStep {
-            margin: 4px 0 0;
-            font-size: 13px;
-            color: #90caf9;
-        }
-
-        #infoBtn {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #2196F3;
-            color: white;
-            border: none;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-
-        #infoOverlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #infoOverlay.open {
-            display: flex;
-        }
-
-        #infoBox {
-            background: #1a1a2e;
-            color: #e0e0e0;
-            border-radius: 12px;
-            padding: 32px 36px;
-            max-width: 520px;
-            width: 90%;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6);
-            position: relative;
-            line-height: 1.7;
-            font-family: sans-serif;
-        }
-
-        #infoBox h2 {
-            margin-top: 0;
-            color: #64b5f6;
-        }
-
-        #infoBox ol {
-            padding-left: 20px;
-        }
-
-        #infoBox li {
-            margin-bottom: 6px;
-        }
-
-        #infoClose {
-            position: absolute;
-            top: 12px;
-            right: 16px;
-            background: none;
-            border: none;
-            color: #aaa;
-            font-size: 22px;
-            cursor: pointer;
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
     <script type="importmap">
         {
             "imports": {
@@ -187,6 +66,7 @@
         const membrane = lab.addMembrane([chromo1, chromo2, chromo3, chromo4]);
 
         let chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy;
+        let membraneA, membraneB;
         let state = 'initial';
         const btn = document.getElementById('duplicateBtn');
 
@@ -246,8 +126,20 @@
                     25, 3000
                 );
                 state = 'anaphase1_done';
-                btn.textContent = 'Done';
+                btn.textContent = 'Telophase I';
                 stepLabel.textContent = 'Anaphase I — homologs at opposite poles, sister chromatids intact';
+                btn.disabled = false;
+            } else if (state === 'anaphase1_done') {
+                btn.textContent = 'Dividing...';
+                stepLabel.textContent = 'Telophase I — cytokinesis, cell dividing into two';
+                [membraneA, membraneB] = await lab.cytokinesis(
+                    membrane,
+                    [chromo1, chromo1_copy, chromo2, chromo2_copy],
+                    [chromo3, chromo3_copy, chromo4, chromo4_copy]
+                );
+                state = 'telophase1_done';
+                btn.textContent = 'Done';
+                stepLabel.textContent = 'Telophase I — two haploid cells formed';
                 btn.disabled = false;
             }
         });
