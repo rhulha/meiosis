@@ -1,6 +1,11 @@
 import { GeneEngine } from './gene_engine.js';
 
 export class GeneLab extends GeneEngine {
+    setBallColor(ball, color) {
+        ball.material.color.set(color);
+        ball.material.emissive.set(color);
+    }
+
     addChromosome(pattern, color, x = 0, y = 0, z = 0) {
         const numBalls = (pattern.match(/o/g) || []).length;
         z = numBalls - 9;
@@ -162,20 +167,47 @@ export class GeneLab extends GeneEngine {
         const chromoA = diagonal ? sistersA[0] : sistersA[1];
         const chromoB = diagonal ? sistersB[1] : sistersB[0];
 
-        const maxIndex = Math.min(chromoA.balls.length, chromoB.balls.length) - 1;
-        const crossoverIndex = Math.floor(Math.random() * (maxIndex - 1)) + 1;
+        const len = Math.min(chromoA.balls.length, chromoB.balls.length);
+        const centromereIndex = chromoA.balls.findIndex(ball =>
+            this.connections.some(c => c.child === ball && c.line !== null)
+        );
 
-        const tailA = chromoA.balls.slice(crossoverIndex);
-        const tailB = chromoB.balls.slice(crossoverIndex);
+        const validPoints = [];
+        for (let i = 1; i < centromereIndex; i++) validPoints.push(i);
+        for (let i = centromereIndex + 1; i < len - 1; i++) validPoints.push(i);
+        if (validPoints.length === 0) return;
+
+        const crossoverIndex = validPoints[Math.floor(Math.random() * validPoints.length)];
+        const aboveCentromere = crossoverIndex < centromereIndex;
+
+        let tailA, tailB, headA, headB;
+        if (aboveCentromere) {
+            tailA = chromoA.balls.slice(0, crossoverIndex);
+            tailB = chromoB.balls.slice(0, crossoverIndex);
+            headA = chromoA.balls.slice(crossoverIndex);
+            headB = chromoB.balls.slice(crossoverIndex);
+        } else {
+            tailA = chromoA.balls.slice(crossoverIndex);
+            tailB = chromoB.balls.slice(crossoverIndex);
+            headA = chromoA.balls.slice(0, crossoverIndex);
+            headB = chromoB.balls.slice(0, crossoverIndex);
+        }
+
+        const allBalls = [...sistersA, ...sistersB].flatMap(c => c.balls);
+        allBalls.forEach(b => {
+            b.userData.pinned = true;
+            if (b.userData.tetradPos) {
+                b.position.x = b.userData.tetradPos.x;
+                b.position.y = b.userData.tetradPos.y;
+                b.position.z = b.userData.tetradPos.z;
+                b.userData.oldX = b.position.x;
+                b.userData.oldY = b.position.y;
+                b.userData.oldZ = b.position.z;
+            }
+        });
 
         const initA = tailA.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
         const initB = tailB.map(b => ({ x: b.position.x, y: b.position.y, z: b.position.z }));
-
-        const colorA = chromoA.color;
-        const colorB = chromoB.color;
-
-        const allBalls = [...sistersA, ...sistersB].flatMap(c => c.balls);
-        allBalls.forEach(b => b.userData.pinned = true);
 
         return new Promise((resolve) => {
             const startTime = Date.now();
@@ -205,28 +237,33 @@ export class GeneLab extends GeneEngine {
                 if (progress < 1) {
                     requestAnimationFrame(animate);
                 } else {
-                    const connA = this.connections.find(c =>
-                        c.parent === chromoA.balls[crossoverIndex - 1] &&
-                        c.child === chromoA.balls[crossoverIndex]
-                    );
-                    const connB = this.connections.find(c =>
-                        c.parent === chromoB.balls[crossoverIndex - 1] &&
-                        c.child === chromoB.balls[crossoverIndex]
-                    );
-                    if (connA) connA.child = chromoB.balls[crossoverIndex];
-                    if (connB) connB.child = chromoA.balls[crossoverIndex];
-
-                    chromoA.balls = [...chromoA.balls.slice(0, crossoverIndex), ...tailB];
-                    chromoB.balls = [...chromoB.balls.slice(0, crossoverIndex), ...tailA];
-
-                    chromoA.balls.slice(crossoverIndex).forEach(ball => {
-                        ball.material.color.setHex(colorB);
-                        ball.material.emissive.setHex(colorB);
-                    });
-                    chromoB.balls.slice(crossoverIndex).forEach(ball => {
-                        ball.material.color.setHex(colorA);
-                        ball.material.emissive.setHex(colorA);
-                    });
+                    if (aboveCentromere) {
+                        const connA = this.connections.find(c =>
+                            c.parent === chromoA.balls[crossoverIndex - 1] &&
+                            c.child === chromoA.balls[crossoverIndex]
+                        );
+                        const connB = this.connections.find(c =>
+                            c.parent === chromoB.balls[crossoverIndex - 1] &&
+                            c.child === chromoB.balls[crossoverIndex]
+                        );
+                        if (connA) connA.parent = chromoB.balls[crossoverIndex - 1];
+                        if (connB) connB.parent = chromoA.balls[crossoverIndex - 1];
+                        chromoA.balls = [...tailB, ...headA];
+                        chromoB.balls = [...tailA, ...headB];
+                    } else {
+                        const connA = this.connections.find(c =>
+                            c.parent === chromoA.balls[crossoverIndex - 1] &&
+                            c.child === chromoA.balls[crossoverIndex]
+                        );
+                        const connB = this.connections.find(c =>
+                            c.parent === chromoB.balls[crossoverIndex - 1] &&
+                            c.child === chromoB.balls[crossoverIndex]
+                        );
+                        if (connA) connA.child = chromoB.balls[crossoverIndex];
+                        if (connB) connB.child = chromoA.balls[crossoverIndex];
+                        chromoA.balls = [...headA, ...tailB];
+                        chromoB.balls = [...headB, ...tailA];
+                    }
 
                     allBalls.forEach(b => b.userData.pinned = false);
                     resolve();
@@ -304,6 +341,7 @@ export class GeneLab extends GeneEngine {
                     chromos.forEach(c => c.balls.forEach(ball => {
                         ball.userData.pinned = false;
                         ball.userData.tetradId = tetradId;
+                        ball.userData.tetradPos = { x: ball.position.x, y: ball.position.y, z: ball.position.z };
                     }));
                     resolve();
                 }
