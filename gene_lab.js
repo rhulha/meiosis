@@ -7,9 +7,9 @@ export class GeneLab extends GeneEngine {
         ball.material.emissive.set(color);
     }
 
-    addChromosome(pattern, color, x = 0, y = 0) {
+    addChromosome(pattern, color, x = 0, y = 0, zOffset = 0) {
         const numBalls = (pattern.match(/o/g) || []).length;
-        const z = numBalls - 9;
+        const z = numBalls - 9 + zOffset;
         const balls = [];
         let currentBall = this.addBall(x, y, z, color);
         balls.push(currentBall);

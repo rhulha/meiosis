@@ -24,6 +24,7 @@
     </div>
     <button id="duplicateBtn">Duplicate Chromosomes</button>
     <button id="infoBtn">i</button>
+    <button id="modeBtn"></button>
 
     <div id="infoOverlay">
         <div id="infoBox">
@@ -58,14 +59,48 @@
         const yellow = 0xffff00;
         const red = 0xff1493;
 
-        const chromo1 = lab.addChromosome("oo-oooo", red, -15, 5);
-        const chromo2 = lab.addChromosome("ooo-ooooooo", yellow, -5, 8);
-        const chromo3 = lab.addChromosome("oo-oooo", yellow, 5, 10);
-        const chromo4 = lab.addChromosome("ooo-ooooooo", red, 10, -5);
+        const human = new URLSearchParams(location.search).get('mode') === 'human';
+        const modeBtn = $('modeBtn');
+        modeBtn.textContent = human ? 'Simple mode (4 chromosomes)' : 'Human mode (46 chromosomes)';
+        modeBtn.addEventListener('click', () => {
+            const url = new URL(location.href);
+            if (human) url.searchParams.delete('mode');
+            else url.searchParams.set('mode', 'human');
+            location.href = url;
+        });
 
-        const membrane = lab.addMembrane([chromo1, chromo2, chromo3, chromo4]);
+        const humanSpecs = () => {
+            const cols = 6, spacing = 11;
+            return Array.from({ length: 23 }, (_, i) => {
+                const cx = ((i % cols) - (cols - 1) / 2) * spacing;
+                const z = (Math.floor(i / cols) - 1.5) * spacing;
+                const pattern = "o".repeat(2 + (i % 2)) + "-" + "o".repeat(3 + (i * 2) % 4);
+                const maternalRed = Math.random() < 0.5;
+                return {
+                    pattern,
+                    a: [maternalRed ? red : yellow, cx - 2.5, 10, z],
+                    b: [maternalRed ? yellow : red, cx + 2.5, 10, z]
+                };
+            });
+        };
 
-        let chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy;
+        const specs = human ? humanSpecs() : [
+            { pattern: "oo-oooo", a: [red, -15, 5, 0], b: [yellow, 5, 10, 0] },
+            { pattern: "ooo-ooooooo", a: [yellow, -5, 8, 0], b: [red, 10, -5, 0] }
+        ];
+        const anaphaseSeparation = human ? 90 : 25;
+        const cytokinesisSeparation = human ? 30 : 20;
+        const meiosisIISeparation = human ? 30 : 15;
+        if (human) lab.camera.position.z = 130;
+
+        const homA = specs.map(s => lab.addChromosome(s.pattern, ...s.a));
+        const homB = specs.map(s => lab.addChromosome(s.pattern, ...s.b));
+        let copiesA, copiesB;
+        const withCopies = (homs, copies) => homs.flatMap((c, i) => [c, copies[i]]);
+        const pairsOf = (homs, copies) => homs.map((c, i) => [c, copies[i]]);
+
+        const membrane = lab.addMembrane([...homA, ...homB]);
+
         let membraneA, membraneB;
         let state = 'initial';
         const btn = document.getElementById('duplicateBtn');
@@ -80,14 +115,12 @@
             if (state === 'initial') {
                 btn.textContent = 'Duplicating...';
                 stepLabel.textContent = 'S Phase — chromosomes duplicating';
-                [chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy] = await Promise.all([
-                    lab.duplicateChromosome(chromo1, 2.2, 0, 0, 150),
-                    lab.duplicateChromosome(chromo2, 2.2, 0, 0, 150),
-                    lab.duplicateChromosome(chromo3, 2.2, 0, 0, 150),
-                    lab.duplicateChromosome(chromo4, 2.2, 0, 0, 150)
+                [copiesA, copiesB] = await Promise.all([
+                    Promise.all(homA.map(c => lab.duplicateChromosome(c, 2.2, 0, 0, 150))),
+                    Promise.all(homB.map(c => lab.duplicateChromosome(c, 2.2, 0, 0, 150)))
                 ]);
 
-                membrane.chromosomes.push(chromo1_copy, chromo2_copy, chromo3_copy, chromo4_copy);
+                membrane.chromosomes.push(...copiesA, ...copiesB);
 
                 state = 'duplicated';
                 btn.textContent = 'Form Tetrads';
@@ -96,10 +129,9 @@
             } else if (state === 'duplicated') {
                 btn.textContent = 'Forming Tetrads...';
                 stepLabel.textContent = 'Prophase I — homologs pairing (synapsis)';
-                await Promise.all([
-                    lab.formTetrad4(chromo1, chromo1_copy, chromo3, chromo3_copy, 2.2),
-                    lab.formTetrad4(chromo2, chromo2_copy, chromo4, chromo4_copy, 2.2)
-                ]);
+                await Promise.all(homA.map((a, i) =>
+                    lab.formTetrad4(a, copiesA[i], homB[i], copiesB[i], 2.2)
+                ));
 
                 state = 'tetrads_formed';
                 btn.textContent = 'Crossover';
@@ -108,10 +140,9 @@
             } else if (state === 'tetrads_formed') {
                 btn.textContent = 'Crossing Over...';
                 stepLabel.textContent = 'Prophase I — crossing over in progress';
-                await Promise.all([
-                    lab.crossoverTetrad([chromo1, chromo1_copy], [chromo3, chromo3_copy]),
-                    lab.crossoverTetrad([chromo2, chromo2_copy], [chromo4, chromo4_copy])
-                ]);
+                await Promise.all(homA.map((a, i) =>
+                    lab.crossoverTetrad([a, copiesA[i]], [homB[i], copiesB[i]])
+                ));
 
                 state = 'crossover_done';
                 btn.textContent = 'Anaphase I';
@@ -121,9 +152,9 @@
                 btn.textContent = 'Separating...';
                 stepLabel.textContent = 'Anaphase I — homologous pairs pulling apart';
                 await lab.anaphaseI(
-                    [chromo1, chromo1_copy, chromo2, chromo2_copy],
-                    [chromo3, chromo3_copy, chromo4, chromo4_copy],
-                    25, 3000
+                    withCopies(homA, copiesA),
+                    withCopies(homB, copiesB),
+                    anaphaseSeparation, 3000
                 );
                 state = 'anaphase1_done';
                 btn.textContent = 'Telophase I';
@@ -134,9 +165,9 @@
                 stepLabel.textContent = 'Telophase I — cytokinesis, cell dividing into two';
                 [membraneA, membraneB] = await lab.cytokinesis(
                     membrane,
-                    [chromo1, chromo1_copy, chromo2, chromo2_copy],
-                    [chromo3, chromo3_copy, chromo4, chromo4_copy],
-                    20
+                    withCopies(homA, copiesA),
+                    withCopies(homB, copiesB),
+                    cytokinesisSeparation
                 );
                 state = 'telophase1_done';
                 btn.textContent = 'Meiosis II';
@@ -147,9 +178,9 @@
                 stepLabel.textContent = 'Meiosis II — sister chromatids separating';
                 await lab.meiosisII(
                     membraneA, membraneB,
-                    [[chromo1, chromo1_copy], [chromo2, chromo2_copy]],
-                    [[chromo3, chromo3_copy], [chromo4, chromo4_copy]],
-                    15, 3000
+                    pairsOf(homA, copiesA),
+                    pairsOf(homB, copiesB),
+                    meiosisIISeparation, 3000
                 );
                 state = 'done';
                 btn.textContent = 'Restart';

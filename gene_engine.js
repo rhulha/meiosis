@@ -68,7 +68,8 @@ export class GeneEngine {
     }
 
     addBall(x = 0, y = 0, z = 0, color) {
-        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        this.ballGeometry ??= new THREE.SphereGeometry(1, 32, 32);
+        const geometry = this.ballGeometry;
         const material = new THREE.MeshStandardMaterial({
             color: color,
             emissive: color,

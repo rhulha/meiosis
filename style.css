@@ -74,6 +74,21 @@ body {
     box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
+#modeBtn {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    padding: 8px 14px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
 #infoOverlay {
     display: none;
     position: fixed;
